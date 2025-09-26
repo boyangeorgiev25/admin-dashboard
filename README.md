@@ -37,7 +37,7 @@ A secure, web-based admin dashboard for platform moderation and user management.
 ### 1. Installation
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/boyangeorgiev25/admin-dashboard.git
 cd dashboard
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
