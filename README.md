@@ -107,23 +107,6 @@ dashboard/
 └── docker-compose.yml   # Production deployment
 ```
 
-## Development
-
-### Code Quality
-
-```bash
-pytest                     # Run test suite
-black . && isort .        # Format code
-pre-commit run --all-files # Run all quality checks
-```
-
-### Adding New Features
-
-1. Create new services in `src/services/`
-2. Add UI components in `src/ui/tabs/`
-3. Update authentication in `src/core/auth.py` if needed
-4. Add tests in `tests/`
-
 ## Security Considerations
 
 - All admin actions are logged with timestamps and user context
