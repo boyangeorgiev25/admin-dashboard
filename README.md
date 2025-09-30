@@ -37,7 +37,7 @@ A secure, web-based admin dashboard for platform moderation and user management.
 ### 1. Installation
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/boyangeorgiev25/admin-dashboard.git
 cd dashboard
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -201,23 +201,6 @@ dashboard/
 ├── requirements.txt     # Python dependencies
 └── docker-compose.yml   # Production deployment
 ```
-
-## Development
-
-### Code Quality
-
-```bash
-pytest                     # Run test suite
-black . && isort .        # Format code
-pre-commit run --all-files # Run all quality checks
-```
-
-### Adding New Features
-
-1. Create new services in `src/services/`
-2. Add UI components in `src/ui/tabs/`
-3. Update authentication in `src/core/auth.py` if needed
-4. Add tests in `tests/`
 
 ## Security Considerations
 
