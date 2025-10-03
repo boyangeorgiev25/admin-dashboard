@@ -27,6 +27,9 @@ class Config:
     # Environment
     ENVIRONMENT = os.getenv("ENVIRON", "development")
 
+    # Geocoding defaults
+    DEFAULT_LOCATION = os.getenv("DEFAULT_LOCATION", "POINT(4.19297 51.2603666)")
+
     @classmethod
     def validate_config(cls):
         """Validate critical configuration"""

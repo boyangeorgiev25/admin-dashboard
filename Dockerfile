@@ -24,6 +24,9 @@ ENV PATH="/home/app/.local/bin:${PATH}"
 # Copy application code
 COPY --chown=app:app . .
 
+# Add src to Python path for imports
+ENV PYTHONPATH="/app/src:${PYTHONPATH}"
+
 # Create .streamlit directory and config
 RUN mkdir -p /home/app/.streamlit
 COPY --chown=app:app .streamlit/ /home/app/.streamlit/

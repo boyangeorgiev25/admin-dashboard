@@ -4,11 +4,11 @@ from typing import Dict, List
 
 import requests
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, func, text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import func, text
 
 from core.models import DeletedUser, Feedback, User, UserReport
 from core.security import AuditLogger, audit_log, security_validator
+from services.database_service import DatabaseService
 from utils.error_handler import ErrorHandler
 from utils.exceptions import DashboardException, DatabaseError, ValidationError
 
@@ -22,27 +22,16 @@ class ModerationService:
         self.use_direct_db = use_direct_db
 
         if use_direct_db:
-            db_host = os.getenv("DB_HOST", "34.76.230.176")
-            db_user = os.getenv("DB_USER", "boyan")
-            db_password = os.getenv("DB_PASSWORD", "00000000")
-            db_name = os.getenv("DB_NAME", "jointlyDev")
-            db_port = os.getenv("DB_PORT", "3306")
-
-            DATABASE_URL = f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-
-            self.engine = create_engine(
-                DATABASE_URL, pool_recycle=1800, pool_pre_ping=True
-            )
-            self.SessionLocal = sessionmaker(
-                autocommit=False, autoflush=False, bind=self.engine
-            )
+            self.db_service = DatabaseService()
 
     def get_db_session(self):
-        return self.SessionLocal()
+        return self.db_service.get_session()
 
     @audit_log("SEND_ADMIN_MESSAGE")
     @ErrorHandler.handle_database_error
-    def send_message(self, user_id: str, subject: str, message: str) -> bool:
+    def send_message(self, user_id: str, subject: str, message: str,
+                     action_type: str = None, action_text: str = None,
+                     action_data: dict = None) -> bool:
         if not security_validator.validate_user_id(user_id):
             raise ValidationError("Invalid user ID format")
         if not security_validator.validate_message_content(message):
@@ -52,6 +41,7 @@ class ModerationService:
 
         if self.use_direct_db:
             import time
+            import json
 
             from core.models import IndMessage
 
@@ -61,13 +51,14 @@ class ModerationService:
                     timestamp=int(time.time()),
                     sender_id=1,
                     ind_chat_id=int(user_id),
-                    action_type="direct_message",
-                    action_text="Dashboard message",
+                    action_type=action_type if action_type else "direct_message",
+                    action_text=action_text if action_text else "Dashboard message",
+                    action_data=json.dumps(action_data) if action_data else None
                 )
 
                 AuditLogger.log_action(
                     "MESSAGE_SENT",
-                    {"recipient_id": user_id, "message_length": len(message)},
+                    {"recipient_id": user_id, "message_length": len(message), "has_action": bool(action_type)},
                 )
 
                 db.add(new_message)
@@ -268,9 +259,6 @@ class ModerationService:
 
                     rating = row_dict.get("rating", 0)
 
-                    feedback_date = row_dict.get("feedback_date")
-
-                  
                     feedback_date = row_dict.get("feedback_date")
 
                     feedback_list.append(

@@ -12,6 +12,12 @@ services:
       - ./.env:/app/.env:ro
     restart: unless-stopped
     container_name: jointly-dashboard
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
       interval: 30s

@@ -51,10 +51,34 @@ class Activity(Base):
     name = Column(String(60))
     description = Column(String(350))
     owner_id = Column(Integer, ForeignKey("users.id"))
-    date = Column(DateTime, nullable=True)
+    subtype_id = Column(Integer, ForeignKey('activity_types.id'), index=True, nullable=True)
+    subtype_code = Column(Integer, nullable=True)
+    intent = Column(Integer, index=True, nullable=True)
+    date = Column(DateTime, nullable=True, index=True)
+    place_id = Column(Integer, nullable=True)
+    place = Column(String(100), nullable=True)
     city = Column(String(100))
-    is_full = Column(Boolean)
-    is_reported = Column(Boolean)
+    location = Column(String(100), nullable=True)
+    participants_min = Column(Integer, nullable=True)
+    participants_max = Column(Integer, nullable=True)
+    min_age = Column(Integer, nullable=True)
+    max_age = Column(Integer, nullable=True)
+    allowed_genders = Column(Integer, nullable=True)
+    img_url = Column(String(200), nullable=True)
+    question1 = Column(String(150), nullable=True)
+    question2 = Column(String(150), nullable=True)
+    question3 = Column(String(150), nullable=True)
+    is_full = Column(Boolean, default=False)
+    is_reported = Column(Boolean, default=False)
+    shuffle_key = Column(Float, nullable=True)
+    created_at = Column(DateTime, nullable=True)
+    nl = Column(Boolean, nullable=True)
+    en = Column(Boolean, nullable=True)
+    fr = Column(Boolean, nullable=True)
+    schedule_date_deadline = Column(DateTime, nullable=True)
+    check_in_sent = Column(Boolean, nullable=True)
+    asked_review = Column(Boolean, nullable=True)
+    is_partner_event = Column(Boolean, nullable=True)
 
 
 class Message(Base):
@@ -110,3 +134,148 @@ class Feedback(Base):
     timestamp = Column(DateTime, nullable=True)
     status = Column(String(50), nullable=True)
     read_status = Column(Boolean, default=False)
+
+
+class Place(Base):
+    __tablename__ = "places"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(60))
+    subtype_id = Column(Integer, ForeignKey('activity_types.id'), index=True)
+    keywords = Column(String(150))
+    address = Column(String(150))
+    img_url = Column(String(150))
+    url = Column(String(150))
+    location = Column(String(100))
+
+
+class ActivityType(Base):
+    __tablename__ = "activity_types"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    type = Column(String(50), nullable=False)
+    subtype = Column(String(50), nullable=False, unique=True)
+    subtype_nl = Column(String(50), nullable=False, unique=True)
+    subtype_fr = Column(String(50), nullable=False, unique=True)
+    subtype_code = Column(Integer, unique=True, nullable=False)
+    img_url = Column(String(250), nullable=True)
+    emoji = Column(String(10), nullable=False)
+
+
+class Community(Base):
+    __tablename__ = 'communities'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(40))
+    description = Column(String(300))
+    img_url = Column(String(150))
+    location = Column(String(100))
+    is_starter = Column(Boolean)
+
+
+class ActivityJoiner(Base):
+    __tablename__ = 'activity_joiners'
+    activity_id = Column(Integer, ForeignKey('activities.id'), primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
+    answer1 = Column(String(250), nullable=True)
+    answer2 = Column(String(250), nullable=True)
+    answer3 = Column(String(250), nullable=True)
+    intro = Column(String(250), nullable=True)
+
+
+class ChatMeta(Base):
+    __tablename__ = 'chat_meta'
+    id = Column(Integer, primary_key=True)
+    activity_id = Column(Integer, ForeignKey('activities.id'), index=True, nullable=True)
+    last_sender_name = Column(String(100), nullable=True)
+    last_message = Column(Text, nullable=True)
+    last_timestamp = Column(Integer, nullable=True)
+    activity_name = Column(String(50), nullable=True)
+    activity_subtype_id = Column(Integer, ForeignKey('activity_types.id'), nullable=True)
+
+
+class ChatUserActivity(Base):
+    __tablename__ = 'chat_user_activity'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), index=True)
+    chat_id = Column(Integer, ForeignKey('chat_meta.id'))
+    last_activity = Column(Integer, nullable=True)
+    active = Column(Boolean, default=True)
+
+
+class IndChats(Base):
+    __tablename__ = 'ind_chats'
+    id = Column(Integer, primary_key=True)
+    activity_name = Column(String(100), nullable=True)
+    activity_id = Column(Integer, nullable=True)
+    activity_owner_id = Column(Integer, ForeignKey('users.id'))
+    last_sender_name = Column(String(100), nullable=True)
+    last_message = Column(Text, nullable=True)
+    last_timestamp = Column(Integer, nullable=True)
+    receiver_id = Column(Integer, ForeignKey('users.id'))
+
+
+class IndChatMembers(Base):
+    __tablename__ = 'ind_chat_membership'
+    id = Column(Integer, primary_key=True)
+    ind_chat_id = Column(Integer, ForeignKey('ind_chats.id'))
+    user_id = Column(Integer, ForeignKey('users.id'))
+    last_activity = Column(Integer, nullable=True)
+    active = Column(Boolean, default=True)
+
+
+class MessageReaction(Base):
+    __tablename__ = 'message_reactions'
+    id = Column(Integer, primary_key=True, index=True)
+    emoji_id = Column(Integer, nullable=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    message_id = Column(Integer, ForeignKey('messages.id'), index=True)
+
+
+class IndMessageReaction(Base):
+    __tablename__ = 'ind_message_reactions'
+    id = Column(Integer, primary_key=True, index=True)
+    emoji_id = Column(Integer, nullable=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    ind_message_id = Column(Integer, ForeignKey('ind_messages.id'), index=True)
+
+
+class CommunityThread(Base):
+    __tablename__ = 'community_threads'
+    id = Column(Integer, primary_key=True)
+    community_id = Column(Integer, ForeignKey('communities.id'))
+    created_at = Column(DateTime)
+    last_updated = Column(DateTime)
+    owner_id = Column(Integer, ForeignKey('users.id'))
+    body = Column(Text)
+    title = Column(String(250))
+    is_reported = Column(Boolean, default=False)
+
+
+class CommunityThreadReply(Base):
+    __tablename__ = 'community_thread_replies'
+    id = Column(Integer, primary_key=True)
+    thread_id = Column(Integer, ForeignKey('community_threads.id'), index=True)
+    created_at = Column(DateTime)
+    owner_id = Column(Integer, ForeignKey('users.id'), nullable=True)
+    body = Column(Text)
+    parent_id = Column(Integer, ForeignKey('community_thread_replies.id'), nullable=True)
+    is_reported = Column(Boolean, default=False)
+
+
+class CommunityMembership(Base):
+    __tablename__ = 'community_membership'
+    user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
+    community_id = Column(Integer, ForeignKey('communities.id'), primary_key=True)
+    last_visited = Column(DateTime)
+
+
+class CommunityThreadUpvote(Base):
+    __tablename__ = 'community_thread_upvotes'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    thread_id = Column(Integer, ForeignKey('community_threads.id'))
+
+
+class CommunityThreadReplyUpvote(Base):
+    __tablename__ = 'community_thread_reply_upvotes'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    reply_id = Column(Integer, ForeignKey('community_thread_replies.id'))

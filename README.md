@@ -1,38 +1,93 @@
 # Admin Dashboard
 
-A secure, web-based admin dashboard for platform moderation and user management. Built with Streamlit and designed for scalable user administration, analytics, and audit logging.
+A comprehensive, secure admin dashboard for platform moderation and management. Built with Streamlit for intuitive user experience and designed for scalable administration, content moderation, and audit logging.
 
-## Features
+## 🚀 Features
 
 ### 🔐 Authentication & Security
 
 - Secure admin authentication with bcrypt password hashing
-- Session timeout management
-- Comprehensive audit logging of all admin actions
+- Session timeout management (configurable)
+- Comprehensive audit logging of all critical actions
 - Input sanitization and security validation
+- No hardcoded credentials (environment-based configuration)
+- SQL injection prevention with parameterized queries
 
 ### 👥 User Management
 
-- **User Lookup**: Search and view detailed user profiles
+- **User Lookup**: Search users by ID or username with detailed profiles
+- **User Activities**: View user's activities, messages, and participation history
 - **Moderation Tools**: Ban/unban users with reason tracking
-- **Direct Messaging**: Send messages to users directly
-- **Bulk Operations**: Manage multiple users efficiently
+- **Direct Messaging**: Send messages to users as admin
+- **Account Management**: View registration status, verification, statistics
 
-### 📊 Analytics & Reporting
+### 💬 Content Moderation
 
-- Real-time user statistics and growth metrics
-- Interactive charts and visualizations with Plotly
-- Platform usage analytics
+#### Chat Moderation
+- Monitor activity group chats
+- View direct messages between users
+- Search messages by keyword across all chats
+- Flag inappropriate content
+- View chat statistics and engagement
+
+#### Forum Moderation
+- View all community forum threads
+- Monitor thread replies and discussions
+- Delete inappropriate threads/replies with audit trail
+- View reported content
+- Search forum posts by keyword
+- Track upvotes and engagement
+- View community members
+
+### 🚩 Reports & Feedback
+
+- **User Reports**: Handle reported users and content
+- **Feedback Management**: Review and respond to user feedback
+- **Report Analytics**: Track report trends and patterns
+
+### 📊 Analytics & Insights
+
+- Real-time platform statistics
+- User growth and activity metrics
+- Interactive charts with Plotly
 - Custom date range filtering
+- Export capabilities for reporting
 
-### 📝 Audit & Feedback
+### ⚙️ Platform Configuration
 
-- Complete audit trail of all admin actions
-- User feedback management and review
-- Detailed activity reports
-- Export capabilities for compliance
+#### Activity Types
+- Manage activity categories and subtypes
+- Multi-language support (EN, NL, FR)
+- Custom icons and images
+- Subtype codes for categorization
 
-## Quick Start
+#### Venues
+- Venue/location management
+- Link venues to activity types
+- Address and location data
+- Venue keywords for discovery
+
+#### Communities
+- Community management (create, edit, delete)
+- Starter vs. regular community distinction
+- Member tracking
+- Forum integration
+
+### 🔔 Communications
+
+#### Notifications
+- Send bulk push notifications
+- Filter by language, registration status, user ID range
+- Preview recipient count before sending
+- Track sent/failed notifications
+
+#### ConvertKit Integration
+- Sync users to ConvertKit email lists
+- Bulk email export
+- Tag management
+- Subscriber tracking
+
+## 📋 Quick Start
 
 ### 1. Installation
 
@@ -46,57 +101,37 @@ pip install -r requirements.txt
 
 ### 2. Database Setup
 
-Configure your MySQL database and update the connection details in `.env`:
+This dashboard connects to an existing MySQL database. Ensure your database has the required tables (see Database Schema section).
+
+### 3. Environment Configuration
+
+Create your `.env` file from the example:
 
 ```bash
 cp .env.example .env
 ```
 
-### 3. Environment Configuration
-
-Edit `.env` with your settings:
-
 #### Generate SECRET_KEY
 
-The SECRET_KEY is a cryptographic secret used for session management and security features. It must be:
-
-- At least 64 characters long (hexadecimal format)
-- Completely random and unpredictable
-- Unique for each installation
-
-**Generate using Python:**
+The SECRET_KEY is a cryptographic secret used for session management. Generate it using:
 
 ```bash
 python -c 'import secrets; print(secrets.token_hex(32))'
 ```
 
-This generates 32 random bytes and converts them to a 64-character hexadecimal string.
-
-**Or using OpenSSL:**
-
-```bash
-openssl rand -hex 32
-```
-
-**Example output:**
-
-```
-a3f8c92b4e7d1a6f9c2b5e8d7a4f1c6b9e2a5d8c1f4b7e0a3d6c9f2b5e8a1d4c7
-```
-
-Copy this entire string and use it as your SECRET_KEY in the `.env` file.
+This generates a 64-character hexadecimal string.
 
 #### Generate Password Hash
 
-To create a secure password hash for admin login:
+Create a secure password hash for admin login:
 
 ```bash
 python -c "import bcrypt; print(bcrypt.hashpw(b'your_password_here', bcrypt.gensalt()).decode())"
 ```
 
-Replace `your_password_here` with your desired password. Copy the output (starts with `$2b$12$`).
+Replace `your_password_here` with your desired password.
 
-#### Update .env file
+#### Update .env File
 
 ```env
 # Database Configuration
@@ -106,14 +141,17 @@ DB_PASSWORD=your_password
 DB_NAME=your_database
 DB_PORT=3306
 
-# Security - Generate using command above (produces 64-char hex string)
+# Security
 SECRET_KEY=your_64_character_hex_string_here
 SESSION_TIMEOUT=1800
 
-# Admin Credentials - Generate hash using bcrypt command above
+# Admin Credentials
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD_HASH=$2b$12$your_full_bcrypt_hash_here
 
+# Optional: ConvertKit API
+CONVERTKIT_API_KEY=your_api_key
+CONVERTKIT_API_SECRET=your_api_secret
 ```
 
 ### 4. Run the Application
@@ -124,97 +162,292 @@ streamlit run app.py
 
 Access the dashboard at `http://localhost:8501`
 
-## Docker Deployment
+## 🐳 Docker Deployment
 
-### Running with Docker
-
-#### 1. Set Up Environment Variables
-
-Create a `.env` file with your credentials (see Environment Configuration above):
+### Build and Run
 
 ```bash
+# Create .env file with your credentials
 cp .env.example .env
-```
 
-Generate your SECRET_KEY and password hashes as described in the Environment Configuration section.
-
-#### 2. Build and Run
-
-For production deployment:
-
-```bash
+# Build and start container
 docker-compose up -d
-```
 
-The dashboard will be available at `http://localhost:8501` with health checks enabled.
-
-#### 3. Verify the Container
-
-Check if the container is running:
-
-```bash
-docker-compose ps
-```
-
-View logs:
-
-```bash
+# View logs
 docker-compose logs -f
-```
 
-#### 4. Stop the Container
-
-```bash
+# Stop container
 docker-compose down
 ```
 
-### Docker Environment Variables
+The dashboard will be available at `http://localhost:8501`
 
-When using Docker, environment variables can be set in multiple ways:
-
-1. **Using .env file** (recommended): Create `.env` in the same directory as `docker-compose.yml`
-2. **In docker-compose.yml**: Add environment variables under the `environment` section
-3. **Pass at runtime**: Use `-e` flag with `docker run`
-
-Example docker-compose.yml environment section:
-
-```yaml
-environment:
-  - SECRET_KEY=${SECRET_KEY}
-  - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH}
-  - DB_HOST=db
-  - DB_NAME=admin_dashboard
-```
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 dashboard/
 ├── src/
-│   ├── config/          # Configuration management
-│   ├── core/            # Authentication and security
-│   ├── services/        # Business logic and data services
-│   ├── ui/              # Streamlit interface components
-│   │   └── tabs/        # Individual dashboard tabs
-│   └── utils/           # Utilities and error handling
-├── tests/               # Test suite
-├── requirements.txt     # Python dependencies
-└── docker-compose.yml   # Production deployment
+│   ├── config/              # Configuration management
+│   │   ├── __init__.py
+│   │   └── config.py        # Environment config loader
+│   ├── core/                # Core functionality
+│   │   ├── auth.py          # Authentication system
+│   │   ├── models.py        # SQLAlchemy database models (23 models)
+│   │   └── security.py      # Security validators & audit logging
+│   ├── services/            # Business logic layer (11 services)
+│   │   ├── database_service.py           # Database connection manager
+│   │   ├── user_service.py               # User management
+│   │   ├── moderation_service.py         # User moderation actions
+│   │   ├── chat_moderation_service.py    # Chat monitoring
+│   │   ├── community_forum_service.py    # Forum moderation
+│   │   ├── analytics_service.py          # Platform analytics
+│   │   ├── notification_service.py       # Push notifications
+│   │   ├── activity_type_service.py      # Activity type management
+│   │   ├── venue_service.py              # Venue management
+│   │   ├── community_service.py          # Community management
+│   │   └── convertkit_service.py         # Email marketing
+│   ├── ui/                  # Streamlit UI components
+│   │   ├── components.py    # Reusable UI components
+│   │   ├── dashboard.py     # Main dashboard layout
+│   │   ├── error_handler.py # UI error handling
+│   │   └── tabs/            # Dashboard tabs (12 tabs)
+│   │       ├── user_lookup_tab.py
+│   │       ├── user_activities_tab.py
+│   │       ├── chat_moderation_tab.py
+│   │       ├── forum_moderation_tab.py
+│   │       ├── reports_tab.py
+│   │       ├── feedback_tab.py
+│   │       ├── analytics_tab.py
+│   │       ├── notifications_tab.py
+│   │       ├── activity_types_tab.py
+│   │       ├── venues_tab.py
+│   │       ├── communities_tab.py
+│   │       └── convertkit_tab.py
+│   └── utils/               # Utility modules
+│       ├── error_handler.py # Error handling decorators
+│       ├── exceptions.py    # Custom exception classes
+│       └── logging_config.py # Logging configuration
+├── tests/                   # Test suite
+│   ├── test_auth.py
+│   └── test_security.py
+├── .streamlit/              # Streamlit configuration
+│   └── config.toml
+├── app.py                   # Application entry point
+├── requirements.txt         # Python dependencies
+├── Dockerfile              # Container definition
+├── docker-compose.yml      # Docker orchestration
+├── .env.example            # Environment template
+└── README.md               # This file
 ```
 
-## Security Considerations
+## 🗄️ Database Schema
 
-- All admin actions are logged with timestamps and user context
-- Database connections use parameterized queries to prevent SQL injection
-- User inputs are sanitized using the `bleach` library
-- Sessions expire automatically for security
-- Password hashing uses bcrypt with appropriate salt rounds
+The dashboard expects the following main tables in your MySQL database:
 
-## Dependencies
+### Core Tables
+- `users` - User accounts and profiles
+- `activities` - Platform activities/events
+- `messages` - Activity group chat messages
+- `ind_messages` - Direct messages between users
 
-- **Streamlit**: Web application framework
-- **SQLAlchemy**: Database ORM
-- **Plotly**: Interactive data visualization
-- **bcrypt**: Secure password hashing
-- **bleach**: HTML sanitization
-- **MySQL Connector**: Database connectivity
+### Moderation Tables
+- `reported_users` - User reports
+- `deleted_users` - Deleted user audit trail
+- `feedback` - User feedback submissions
+
+### Community Tables
+- `communities` - Community groups
+- `community_threads` - Forum threads
+- `community_thread_replies` - Thread replies
+- `community_membership` - Community members
+- `community_thread_upvotes` - Thread votes
+- `community_thread_reply_upvotes` - Reply votes
+
+### Chat Tables
+- `chat_meta` - Chat metadata
+- `chat_user_activity` - Chat memberships
+- `ind_chats` - Direct message chats
+- `ind_chat_membership` - DM participants
+- `message_reactions` - Message reactions
+- `ind_message_reactions` - DM reactions
+
+### Configuration Tables
+- `activity_types` - Activity categories
+- `places` - Venue listings
+- `activity_joiners` - Activity participants
+
+See `src/core/models.py` for complete schema definitions.
+
+## 🔒 Security Best Practices
+
+### Implemented Security Features
+
+1. **Authentication**
+   - Bcrypt password hashing with salt
+   - Session-based authentication
+   - Configurable session timeout
+   - Automatic session expiration
+
+2. **Input Validation**
+   - Input sanitization using bleach library
+   - SQL injection prevention (parameterized queries)
+   - XSS protection
+   - CSRF protection (Streamlit built-in)
+
+3. **Audit Logging**
+   - All critical actions logged
+   - Timestamp and context tracking
+   - Action types: USER_BAN, DELETE_THREAD, etc.
+   - Log file: `audit_log.json`
+
+4. **Data Protection**
+   - Environment-based configuration
+   - No credentials in code
+   - Secure session management
+   - Connection pooling with auto-reconnect
+
+### Production Deployment Checklist
+
+- [ ] Generate unique SECRET_KEY (64 chars)
+- [ ] Use strong admin password
+- [ ] Secure `.env` file permissions (chmod 600)
+- [ ] Enable HTTPS (use reverse proxy like nginx)
+- [ ] Configure firewall rules
+- [ ] Set up database backups
+- [ ] Enable database SSL/TLS
+- [ ] Review audit logs regularly
+- [ ] Update dependencies regularly
+- [ ] Monitor application logs
+
+## 📊 Dashboard Navigation
+
+The dashboard is organized into 5 main sections:
+
+### 1. Users
+- **Lookup** - Search and view user profiles
+- **Activities** - View user activity history
+
+### 2. Moderation
+- **Chats** - Monitor chat messages
+- **Forums** - Moderate forum posts
+- **Reports** - Handle user reports
+- **Feedback** - Review user feedback
+
+### 3. Analytics
+- Platform statistics and trends
+- User growth metrics
+- Activity analytics
+
+### 4. Settings
+- **Activity Types** - Manage categories
+- **Venues** - Manage locations
+- **Communities** - Manage groups
+
+### 5. Communications
+- **Notifications** - Send push notifications
+- **ConvertKit** - Email marketing sync
+
+## 🛠️ Development
+
+### Running Tests
+
+```bash
+pytest tests/
+```
+
+### Code Style
+
+The project follows Python best practices:
+- PEP 8 style guide
+- Type hints where applicable
+- Comprehensive error handling
+- Service layer pattern
+- Clear separation of concerns
+
+### Adding a New Feature
+
+1. **Add Model** (if needed): Update `src/core/models.py`
+2. **Create Service**: Add to `src/services/`
+3. **Create UI Tab**: Add to `src/ui/tabs/`
+4. **Update Dashboard**: Register in `src/ui/dashboard.py`
+5. **Test**: Add tests in `tests/`
+
+## 📈 Statistics
+
+- **Total Code**: ~5,800 lines
+- **Database Models**: 23
+- **Services**: 11
+- **UI Components**: 12 tabs
+- **Functions**: 75+ service methods
+- **Error Handlers**: 40+ decorated functions
+- **Audit Points**: 16 critical actions
+
+## 🐛 Troubleshooting
+
+### Database Connection Issues
+
+```bash
+# Test database connection
+python -c "
+from src.services.database_service import DatabaseService
+db = DatabaseService()
+print('Database connection successful!')
+"
+```
+
+### Authentication Issues
+
+- Verify `ADMIN_PASSWORD_HASH` in `.env` matches your password
+- Check `SECRET_KEY` is 64 characters (hex)
+- Clear browser cookies/cache
+
+### Port Already in Use
+
+```bash
+# Change port in command
+streamlit run app.py --server.port 8502
+```
+
+## 📝 License
+
+[Your License Here]
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📧 Support
+
+For issues or questions:
+- Open an issue on GitHub
+- Check existing documentation
+- Review audit logs for errors
+
+## 🔄 Changelog
+
+### Version 2.0.0 (Current)
+- ✅ Added chat moderation system
+- ✅ Added forum moderation system
+- ✅ Expanded activity model (32 fields)
+- ✅ Reorganized navigation (5 categories)
+- ✅ Removed hardcoded credentials
+- ✅ Added 6 chat models
+- ✅ Added 5 forum models
+- ✅ Improved security
+- ✅ Clean, professional UI
+
+### Version 1.0.0
+- Initial release with user management
+- Basic analytics
+- Report handling
+- Notification system
+
+---
+
+**Built with ❤️ using Streamlit and Python**

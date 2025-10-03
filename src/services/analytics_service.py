@@ -1,5 +1,6 @@
 """Analytics and statistics service"""
 
+import streamlit as st
 from datetime import datetime, timedelta
 from typing import Dict, List
 
@@ -17,10 +18,11 @@ class AnalyticsService:
     def __init__(self):
         self.db_service = DatabaseService()
 
+    @st.cache_data(ttl=300)
     @ErrorHandler.handle_database_error
-    def get_platform_stats(self) -> Dict:
-        """Get basic platform statistics"""
-        with self.db_service.get_session() as db:
+    def get_platform_stats(_self) -> Dict:
+        """Get basic platform statistics - cached for 5 minutes"""
+        with _self.db_service.get_session() as db:
             total_users = db.query(User).count()
             active_users = (
                 db.query(User)

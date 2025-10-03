@@ -4,6 +4,7 @@ port = 8501
 enableCORS = false
 enableXsrfProtection = false
 maxUploadSize = 200
+runOnSave = false
 
 [theme]
 base = "dark"
@@ -14,3 +15,11 @@ textColor = "#FAFAFA"
 
 [browser]
 gatherUsageStats = false
+
+[runner]
+magicEnabled = false
+fastReruns = true
+
+[client]
+showErrorDetails = false
+toolbarMode = "minimal"

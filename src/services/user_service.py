@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 from sqlalchemy import desc
 
-from core.models import IndMessage, Message, User, UserReport
+from core.models import Activity, ActivityJoiner, IndMessage, Message, User, UserReport
 from core.security import AuditLogger
 from services.database_service import DatabaseService
 from utils.error_handler import ErrorHandler
@@ -66,8 +66,101 @@ class UserService:
                 user, report_count, total_messages, recent_messages
             )
 
-    def get_user_activities(self, user_id: str) -> List[Dict]:
-        return []
+    def get_user_activities(self, user_id: int) -> List[Dict]:
+        with self.db_service.get_session() as db:
+            joined_activities = (
+                db.query(ActivityJoiner, Activity)
+                .join(Activity, ActivityJoiner.activity_id == Activity.id)
+                .filter(ActivityJoiner.user_id == user_id)
+                .order_by(desc(Activity.date))
+                .all()
+            )
+
+            hosted_activities = (
+                db.query(Activity)
+                .filter(Activity.owner_id == user_id)
+                .order_by(desc(Activity.date))
+                .all()
+            )
+
+            activities = []
+
+            for joiner, activity in joined_activities:
+                activities.append({
+                    'activity_id': activity.id,
+                    'name': activity.name,
+                    'description': activity.description,
+                    'date': activity.date.strftime('%Y-%m-%d %H:%M') if activity.date else 'Unknown',
+                    'city': activity.city,
+                    'status': 'Joined',
+                    'is_full': activity.is_full,
+                    'is_owner': False,
+                    'date_raw': activity.date
+                })
+
+            for activity in hosted_activities:
+                if not any(a['activity_id'] == activity.id for a in activities):
+                    activities.append({
+                        'activity_id': activity.id,
+                        'name': activity.name,
+                        'description': activity.description,
+                        'date': activity.date.strftime('%Y-%m-%d %H:%M') if activity.date else 'Unknown',
+                        'city': activity.city,
+                        'status': 'Host',
+                        'is_full': activity.is_full,
+                        'is_owner': True,
+                        'date_raw': activity.date
+                    })
+
+            activities.sort(key=lambda x: x['date_raw'] if x['date_raw'] else datetime.min, reverse=True)
+
+            for activity in activities:
+                del activity['date_raw']
+
+            return activities
+
+    def get_user_activity_messages(self, user_id: int) -> Dict[int, List[Dict]]:
+        with self.db_service.get_session() as db:
+            joiners = (
+                db.query(ActivityJoiner)
+                .filter(ActivityJoiner.user_id == user_id)
+                .all()
+            )
+
+            hosted = (
+                db.query(Activity)
+                .filter(Activity.owner_id == user_id)
+                .all()
+            )
+
+            activity_ids = [j.activity_id for j in joiners] + [h.id for h in hosted]
+            activity_ids = list(set(activity_ids))
+
+            activity_messages = {}
+            for activity_id in activity_ids:
+                messages = (
+                    db.query(Message)
+                    .filter(
+                        Message.chat_id == activity_id,
+                        Message.sender_id == user_id
+                    )
+                    .order_by(desc(Message.timestamp))
+                    .limit(5)
+                    .all()
+                )
+
+                if messages:
+                    activity_messages[activity_id] = [
+                        {
+                            'content': self._format_message_content(msg.content),
+                            'timestamp': self._format_timestamp(msg.timestamp),
+                            'is_deleted': msg.is_deleted,
+                            'is_edited': msg.is_edited
+                        }
+                        for msg in messages
+                    ]
+
+            return activity_messages
 
     def _validate_search_params(self, search_type: str, search_value: str):
         """Validate search parameters"""

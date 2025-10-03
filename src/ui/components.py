@@ -84,10 +84,37 @@ def display_moderation_actions(user_id: str) -> None:
 
 
 def display_message_form(user_id: str, moderation_service) -> None:
-    """Display direct message form"""
+    """Display direct message form with action button support"""
     st.subheader("Send Direct Message")
     with st.form("direct_message_form"):
         message = st.text_area("Message:", max_chars=1000)
+
+        st.subheader("Action Button (Optional)")
+        add_action = st.checkbox("Add action button to message")
+
+        action_type = None
+        action_text = None
+        action_data = None
+
+        if add_action:
+            action_type = st.selectbox("Action Type", ["navigation", "url", "none"])
+
+            if action_type != "none":
+                action_text = st.text_input("Button Text", max_chars=70, placeholder="View Details")
+
+                if action_type == "navigation":
+                    screen = st.selectbox("Target Screen", ["Browse", "Profile", "Activities", "Communities", "Thread"])
+                    thread_id = st.number_input("Thread ID (if applicable)", min_value=0, value=0)
+
+                    if thread_id > 0:
+                        action_data = {"screen": screen, "params": {"threadId": thread_id}}
+                    else:
+                        action_data = {"screen": screen}
+
+                elif action_type == "url":
+                    url = st.text_input("URL", placeholder="https://...")
+                    if url:
+                        action_data = {"url": url}
 
         col1, col2 = st.columns(2)
         with col1:
@@ -95,7 +122,9 @@ def display_message_form(user_id: str, moderation_service) -> None:
                 if not message:
                     st.error("Please enter a message")
                 else:
-                    success = moderation_service.send_message(user_id, "", message)
+                    success = moderation_service.send_message(
+                        user_id, "", message, action_type, action_text, action_data
+                    )
                     if success:
                         st.success("Message sent successfully!")
                         st.session_state.show_message_form = False
