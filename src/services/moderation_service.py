@@ -43,16 +43,74 @@ class ModerationService:
             import time
             import json
 
-            from core.models import IndMessage
+            from core.models import IndChats, IndChatMembers, IndMessage
 
             with self.get_db_session() as db:
+                sender_id = 1
+                receiver_id = int(user_id)
+
+                existing_chat = db.query(IndChats).filter(
+                    IndChats.activity_owner_id == sender_id,
+                    IndChats.receiver_id == receiver_id
+                ).first()
+
+                existing_chat_reverse = db.query(IndChats).filter(
+                    IndChats.activity_owner_id == receiver_id,
+                    IndChats.receiver_id == sender_id
+                ).first()
+
+                if existing_chat:
+                    existing_chat_id = existing_chat.id
+                    existing_chat.last_sender_name = "Jointly"
+                    existing_chat.last_message = message
+                    existing_chat.last_timestamp = int(time.time())
+                elif existing_chat_reverse:
+                    existing_chat_id = existing_chat_reverse.id
+                    existing_chat_reverse.last_sender_name = "Jointly"
+                    existing_chat_reverse.last_message = message
+                    existing_chat_reverse.last_timestamp = int(time.time())
+                else:
+                    new_ind_chat = IndChats(
+                        activity_name="Jointly Notifications",
+                        activity_id=None,
+                        activity_owner_id=sender_id,
+                        last_sender_name="Jointly",
+                        last_message=message,
+                        last_timestamp=int(time.time()),
+                        receiver_id=receiver_id
+                    )
+
+                    db.add(new_ind_chat)
+                    db.commit()
+                    db.refresh(new_ind_chat)
+
+                    existing_chat_id = new_ind_chat.id
+
+                    owner_chat_member = IndChatMembers(
+                        ind_chat_id=existing_chat_id,
+                        user_id=sender_id,
+                        last_activity=int(time.time()),
+                        active=True
+                    )
+                    db.add(owner_chat_member)
+
+                    receiver_chat_member = IndChatMembers(
+                        ind_chat_id=existing_chat_id,
+                        user_id=receiver_id,
+                        last_activity=None,
+                        active=True
+                    )
+                    db.add(receiver_chat_member)
+
+                db.commit()
+
                 new_message = IndMessage(
                     content=message,
                     timestamp=int(time.time()),
-                    sender_id=1,
-                    ind_chat_id=int(user_id),
-                    action_type=action_type if action_type else "direct_message",
-                    action_text=action_text if action_text else "Dashboard message",
+                    sender_id=sender_id,
+                    ind_chat_id=existing_chat_id,
+                    action_type=action_type if action_type else None,
+                    action_text=action_text if action_text else None,
                     action_data=json.dumps(action_data) if action_data else None
                 )
 

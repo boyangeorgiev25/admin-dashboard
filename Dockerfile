@@ -32,15 +32,15 @@ RUN mkdir -p /home/app/.streamlit
 COPY --chown=app:app .streamlit/ /home/app/.streamlit/
 
 # Expose port
-EXPOSE 8501
+EXPOSE 8080
 
 # Health check
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+HEALTHCHECK CMD curl --fail http://localhost:8080/_stcore/health || exit 1
 
 # Run streamlit with production settings
 CMD ["streamlit", "run", "app.py", \
      "--server.address", "0.0.0.0", \
-     "--server.port", "8501", \
+     "--server.port", "8080", \
      "--server.headless", "true", \
      "--server.enableCORS", "false", \
      "--server.enableXsrfProtection", "false"]

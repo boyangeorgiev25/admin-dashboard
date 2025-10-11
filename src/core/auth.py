@@ -31,12 +31,12 @@ class AuthManager:
                 "locked_until": None,
             }
 
-        brecht_username = os.getenv("BRECHT_USERNAME", "brecht")
-        brecht_password_hash = os.getenv("BRECHT_PASSWORD_HASH")
+        admin_username_2 = os.getenv("ADMIN_USERNAME_2")
+        admin_password_hash_2 = os.getenv("ADMIN_PASSWORD_HASH_2")
 
-        if brecht_password_hash:
-            self.users[brecht_username] = {
-                "password_hash": brecht_password_hash,
+        if admin_username_2 and admin_password_hash_2:
+            self.users[admin_username_2] = {
+                "password_hash": admin_password_hash_2,
                 "role": "admin",
                 "last_login": None,
                 "failed_attempts": 0,
