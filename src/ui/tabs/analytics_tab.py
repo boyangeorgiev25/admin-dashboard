@@ -35,6 +35,7 @@ def _display_key_metrics():
         stats = get_cached_stats()
 
     st.metric("Active Users (30d)", f"{stats.get('active_users', 0):,}")
+    st.metric("New Users (30d)", f"{stats.get('new_users_30d', 0):,}")
     st.metric("Total Users", f"{stats.get('total_users', 0):,}")
     st.metric("Messages Today", f"{stats.get('messages_today', 0):,}")
     st.metric("Reports", f"{stats.get('new_reports', 0):,}")
@@ -50,8 +51,8 @@ def _display_analytics_charts():
         return
 
     df = pd.DataFrame(activity_data)
-    chart_tab1, chart_tab2, chart_tab3 = st.tabs(
-        ["Active Users", "New Users", "Messages"]
+    chart_tab1, chart_tab2, chart_tab3, chart_tab4 = st.tabs(
+        ["Active Users", "New Users", "Messages", "Activities"]
     )
 
     with chart_tab1:
@@ -60,6 +61,8 @@ def _display_analytics_charts():
         _show_new_users_chart(df)
     with chart_tab3:
         _show_messages_chart(df)
+    with chart_tab4:
+        _show_activities_chart(df)
 
 
 def _show_active_users_chart(df):
@@ -113,4 +116,24 @@ def _show_messages_chart(df):
     avg_messages = df["messages"].mean()
     st.info(
         f"Peak: **{max_messages:,}** on {max_date} | Total: **{total_messages:,}** | Avg: **{avg_messages:.0f}**"
+    )
+
+
+def _show_activities_chart(df):
+    if "activities" not in df.columns:
+        return
+
+    fig = px.bar(
+        df, x="date", y="activities", title="Activities Created Per Day (Last 90 Days)"
+    )
+    fig.update_traces(marker_color="#17a2b8")
+    fig.update_layout(height=400, xaxis_tickangle=-45)
+    st.plotly_chart(fig, use_container_width=True)
+
+    max_activities = df["activities"].max()
+    max_date = df.loc[df["activities"].idxmax(), "date"]
+    total_activities = df["activities"].sum()
+    avg_activities = df["activities"].mean()
+    st.info(
+        f"Peak: **{max_activities:,}** on {max_date} | Total: **{total_activities:,}** | Avg: **{avg_activities:.0f}**"
     )

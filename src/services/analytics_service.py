@@ -6,7 +6,7 @@ from typing import Dict, List
 
 from sqlalchemy import and_, func
 
-from core.models import IndMessage, Message, User, UserReport
+from core.models import Activity, IndMessage, Message, User, UserReport
 from services.database_service import DatabaseService
 from utils.error_handler import ErrorHandler
 from utils.exceptions import DatabaseError
@@ -23,10 +23,19 @@ class AnalyticsService:
     def get_platform_stats(_self) -> Dict:
         """Get basic platform statistics - cached for 5 minutes"""
         with _self.db_service.get_session() as db:
-            total_users = db.query(User).count()
+            total_users = db.query(User).filter(User.reg_complete == True).count()
             active_users = (
                 db.query(User)
                 .filter(User.last_active >= datetime.now() - timedelta(days=30))
+                .count()
+            )
+
+            new_users_30d = (
+                db.query(User)
+                .filter(
+                    User.reg_complete == True,
+                    User.created_at >= datetime.now() - timedelta(days=30)
+                )
                 .count()
             )
 
@@ -47,6 +56,7 @@ class AnalyticsService:
             return {
                 "total_users": total_users,
                 "active_users": active_users,
+                "new_users_30d": new_users_30d,
                 "messages_today": messages_today,
                 "new_reports": new_reports,
             }
@@ -102,12 +112,24 @@ class AnalyticsService:
                     .count()
                 )
 
+                activities_count = (
+                    db.query(Activity)
+                    .filter(
+                        and_(
+                            Activity.created_at >= day_start,
+                            Activity.created_at < day_end
+                        )
+                    )
+                    .count()
+                )
+
                 result.append(
                     {
                         "date": date.strftime("%Y-%m-%d"),
                         "active_users": active_users,
                         "new_users": new_users,
                         "messages": messages_count,
+                        "activities": activities_count,
                         "day_name": date.strftime("%A"),
                     }
                 )
