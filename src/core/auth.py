@@ -69,17 +69,28 @@ class AuthManager:
         return bcrypt.checkpw(password.encode("utf-8"), hash.encode("utf-8"))
 
     def authenticate(self, username: str, password: str) -> bool:
-        """Authenticate user credentials"""
+        """Authenticate user credentials with constant-time protection"""
         if not username or not password:
+            time.sleep(0.3)
             return False
 
         user = self.users.get(username)
+
         if not user:
+            dummy_hash = "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5ND0dalODUlKu"
+            try:
+                bcrypt.checkpw(password.encode("utf-8"), dummy_hash.encode("utf-8"))
+            except:
+                pass
             logger.warning(f"Authentication attempt with unknown username: {username}")
-            time.sleep(1)  
             return False
 
         if self._is_account_locked(user):
+            dummy_hash = "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5ND0dalODUlKu"
+            try:
+                bcrypt.checkpw(password.encode("utf-8"), dummy_hash.encode("utf-8"))
+            except:
+                pass
             logger.warning(f"Authentication attempt on locked account: {username}")
             return False
 
@@ -88,10 +99,9 @@ class AuthManager:
             user["failed_attempts"] += 1
 
             if user["failed_attempts"] >= 5:
-                user["locked_until"] = time.time() + (15 * 60)  
+                user["locked_until"] = time.time() + (15 * 60)
                 logger.warning(f"Account locked due to repeated failures: {username}")
 
-            time.sleep(1)  
             return False
 
         user["failed_attempts"] = 0

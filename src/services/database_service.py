@@ -34,16 +34,19 @@ class DatabaseService:
                     user=db_user,
                     password=db_password,
                     db=db_name,
+                    timeout=30,
+                    enable_iam_auth=False,
                 )
 
             self.engine = create_engine(
                 "mysql+pymysql://",
                 creator=getconn,
                 poolclass=QueuePool,
-                pool_size=5,
-                max_overflow=10,
+                pool_size=10,
+                max_overflow=20,
                 pool_pre_ping=True,
-                pool_recycle=3600,
+                pool_recycle=1800,
+                echo=False,
             )
         else:
             db_host = os.getenv("DB_HOST", "127.0.0.1")
